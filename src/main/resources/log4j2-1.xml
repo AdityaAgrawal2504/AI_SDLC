@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd'T'HH:mm:ss.SSS'Z'} %p %c{1.} [%t] %m%n</Property>
+        <Property name="APP_LOG_ROOT">./logs</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT" follow="true">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+
+        <RollingFile name="FileAppender"
+                     fileName="${APP_LOG_ROOT}/user-registration-api.log"
+                     filePattern="${APP_LOG_ROOT}/user-registration-api-%d{yyyy-MM-dd}-%i.log.gz">
+            <!-- Structured JSON layout for file logs to be easily parsed by log management systems -->
+            <JsonLayout complete="false" compact="true" eventEol="true">
+                <KeyValuePair key="timestamp" value="$${date:yyyy-MM-dd'T'HH:mm:ss.SSS'Z'}"/>
+            </JsonLayout>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10MB"/>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+
+        <!-- Abstracted appender for external systems like Kafka or Azure Event Hub -->
+        <Appender type="ExternalSystemLogAppender" name="ExternalSystemAppender">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Appender>
+
+    </Appenders>
+
+    <Loggers>
+        <Logger name="com.example.userregistration" level="info" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="FileAppender"/>
+            <AppenderRef ref="ExternalSystemAppender"/>
+        </Logger>
+
+        <Root level="warn">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="FileAppender"/>
+        </Root>
+    </Loggers>
+</Configuration>
+
+// src/main/java/com/example/userregistration/UserRegistrationApiApplication.java
