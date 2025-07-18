@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" packages="com.example.auth">
+    <Appenders>
+        <!-- Console Appender for local development -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{ISO8601} %highlight{%-5level} [%t] %c{1.} - %msg%n%throwable"/>
+        </Console>
+
+        <!-- Rolling File Appender for structured JSON logs -->
+        <RollingFile name="JsonFile"
+                     fileName="logs/login-verification-api.log"
+                     filePattern="logs/login-verification-api-%d{yyyy-MM-dd}-%i.log.gz">
+            <JsonTemplateLayout eventTemplateUri="classpath:Log4j2JsonTemplate.json" />
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <!-- Root Logger Configuration -->
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="JsonFile"/>
+        </Root>
+
+        <!-- Spring Framework logging level -->
+        <Logger name="org.springframework.web" level="info"/>
+        <Logger name="org.hibernate" level="warn"/>
+    </Loggers>
+</Configuration>
+
+<!-- src/main/resources/Log4j2JsonTemplate.json -->
+{
+  "timestamp": {
+    "$resolver": "timestamp",
+    "pattern": {
+      "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+      "timeZone": "UTC"
+    }
+  },
+  "logLevel": {
+    "$resolver": "level",
+    "field": "name"
+  },
+  "service": "LoginVerificationAPI",
+  "thread": {
+    "$resolver": "thread",
+    "field": "name"
+  },
+  "logger": {
+    "$resolver": "logger",
+    "field": "name"
+  },
+  "message": {
+    "$resolver": "message",
+    "stringified": true
+  },
+  "context": {
+    "$resolver": "mdc"
+  },
+  "exception": {
+    "$resolver": "exception",
+    "field": "stackTrace",
+    "stackTrace": {
+      "stringified": true
+    }
+  }
+}
+
+<!-- src/main/java/com/example/auth/LoginVerificationApiApplication.java -->
