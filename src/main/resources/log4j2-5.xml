@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
+
+        <RollingFile name="RollingFile"
+                     fileName="logs/realtime-chat-stream-grpc.log"
+                     filePattern="logs/realtime-chat-stream-grpc-%d{yyyy-MM-dd}-%i.log.gz">
+            <JsonLayout complete="false" compact="true" eventEol="true">
+                <KeyValuePair key="timestamp" value="$${date:yyyy-MM-dd'T'HH:mm:ss.SSS'Z'}"/>
+            </JsonLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+
+        <!-- Abstracted appender for external systems like Kafka or Azure Event Hubs -->
+        <ExternalLogSystemGRPC name="ExternalSystem" topic="chat-logs">
+             <JsonLayout complete="true" compact="true" eventEol="true"/>
+        </ExternalLogSystemGRPC>
+
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="RollingFile"/>
+            <AppenderRef ref="ExternalSystem"/>
+        </Root>
+
+        <Logger name="com.example.chat" level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="RollingFile"/>
+            <AppenderRef ref="ExternalSystem"/>
+        </Logger>
+
+    </Loggers>
+</Configuration>
+```
+src/main/java/com/example/chat/RealtimeChatStreamGRPCApplication.java
+```java
