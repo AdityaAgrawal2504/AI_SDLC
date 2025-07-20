@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="LOG_PATTERN">
+            %d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%t] %c{1.} - %msg%n
+        </Property>
+        <Property name="LOG_FILE_PATH">logs</Property>
+        <Property name="APP_NAME">auth-service</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT" follow="true">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+
+        <!-- JSON File Appender for structured, machine-readable logs -->
+        <RollingFile name="JsonFile"
+                     fileName="${LOG_FILE_PATH}/${APP_NAME}.json.log"
+                     filePattern="${LOG_FILE_PATH}/${APP_NAME}-%d{yyyy-MM-dd}-%i.json.log.gz">
+            <JsonTemplateLayout eventTemplateUri="classpath:log4j2-json-template.json" />
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+        
+        <!--
+        Example Appender for Kafka. This demonstrates how to extend logging to external systems.
+        Requires 'log4j-kafka' dependency.
+        -->
+        <!--
+        <Kafka name="Kafka" topic="auth-logs">
+            <PatternLayout pattern="%m" />
+            <Property name="bootstrap.servers">kafka-broker1:9092,kafka-broker2:9092</Property>
+        </Kafka>
+        -->
+
+        <!--
+        Example Appender for Azure Event Hub (via Kafka protocol).
+        -->
+        <!--
+        <Kafka name="EventHub" topic="auth-logs-eventhub">
+            <JsonTemplateLayout eventTemplateUri="classpath:log4j2-json-template.json" />
+            <Property name="bootstrap.servers">your-eventhub-namespace.servicebus.windows.net:9093</Property>
+            <Property name="security.protocol">SASL_SSL</Property>
+            <Property name="sasl.mechanism">PLAIN</Property>
+            <Property name="sasl.jaas.config">
+                org.apache.kafka.common.security.plain.PlainLoginModule required username="$ConnectionString"
+                password="Endpoint=sb://...;SharedAccessKeyName=...;SharedAccessKey=...";
+            </Property>
+        </Kafka>
+        -->
+
+    </Appenders>
+
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="JsonFile"/>
+            <!-- <AppenderRef ref="Kafka"/> -->
+            <!-- <AppenderRef ref="EventHub"/> -->
+        </Root>
+
+        <Logger name="com.example.auth" level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="JsonFile"/>
+        </Logger>
+
+        <Logger name="org.springframework.web" level="info" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="JsonFile"/>
+        </Logger>
+
+    </Loggers>
+</Configuration>
+```
+```json
+// src/main/resources/log4j2-json-template.json
+{
+  "timestamp": {
+    "$resolver": "timestamp",
+    "pattern": {
+      "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+      "timeZone": "UTC"
+    }
+  },
+  "level": {
+    "$resolver": "level",
+    "field": "name"
+  },
+  "service": "auth-service",
+  "thread": {
+    "$resolver": "thread",
+    "field": "name"
+  },
+  "logger": {
+    "$resolver": "logger",
+    "field": "name"
+  },
+  "message": {
+    "$resolver": "message",
+    "stringified": true
+  },
+  "context": {
+    "$resolver": "mdc"
+  },
+  "exception": {
+    "$resolver": "exception",
+    "stackTrace": {
+      "stringified": true
+    }
+  }
+}
+```
+```properties
+# src/main/resources/application-AUTH.properties
+server.port=8080
+
+spring.application.name=auth-service
+
+# Specify the Log4j2 configuration file
+logging.config=classpath:log4j2-AUTH.xml
+
+# H2 Database Configuration
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+spring.datasource.url=jdbc:h2:mem:authdb
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=password
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.jpa.hibernate.ddl-auto=update
+
+# Custom Application Properties
+auth.security.account-lock-threshold=5
+auth.security.otp-validity-seconds=300
+
+# Mock OTP Service Configuration
+otp.service.mock.enabled=true
+```
+```java
+// src/main/java/com/example/auth/AuthApplication.java
