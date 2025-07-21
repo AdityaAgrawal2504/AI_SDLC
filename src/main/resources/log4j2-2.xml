@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Appenders>
+        <!-- Console Appender for local development -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
+
+        <!-- Rolling File Appender for persistent logs -->
+        <RollingFile name="FileLogger" fileName="logs/login-verification-api.log"
+                     filePattern="logs/login-verification-api-%d{yyyy-MM-dd}-%i.log.gz">
+            <JsonLayout complete="false" compact="true" eventEol="true">
+                <KeyValuePair key="timestamp" value="$${date:yyyy-MM-dd'T'HH:mm:ss.SSS'Z'}"/>
+            </JsonLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+
+        <!-- This appender can be configured to send logs to Kafka, EventHub, etc. -->
+        <!-- The StructuredLoggerLVA1 is designed to be easily switched to use this appender -->
+        <File name="StructuredLogFile" fileName="logs/structured-log.json">
+             <JsonLayout complete="true" compact="true" eventEol="true" />
+        </File>
+
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="FileLogger"/>
+        </Root>
+
+        <!-- Specific logger for our structured logging abstraction -->
+        <Logger name="com.example.loginverification.logging.StructuredLoggerLVA1" level="info" additivity="false">
+            <AppenderRef ref="StructuredLogFile" />
+            <AppenderRef ref="Console"/> <!-- Also log to console for visibility -->
+        </Logger>
+
+        <Logger name="org.springframework.boot" level="info" additivity="false">
+             <AppenderRef ref="Console"/>
+             <AppenderRef ref="FileLogger"/>
+        </Logger>
+    </Loggers>
+</Configuration>
+```
+```java
+// src/main/java/com/example/loginverification/LoginVerificationApiApplicationLVA1.java
