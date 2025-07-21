@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="LOG_PATTERN">
+            %d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%t] %c{1} - %msg%n
+        </Property>
+        <Property name="LOG_FILE_NAME">auth-service</Property>
+        <Property name="LOG_FILE_PATH">./logs</Property>
+    </Properties>
+
+    <Appenders>
+        <!-- Console Appender for local development -->
+        <Console name="Console" target="SYSTEM_OUT" follow="true">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+
+        <!-- Rolling File Appender for structured JSON logging -->
+        <!-- This is the primary appender for production-grade file logging -->
+        <RollingFile name="File"
+                     fileName="${LOG_FILE_PATH}/${LOG_FILE_NAME}.log"
+                     filePattern="${LOG_FILE_PATH}/${LOG_FILE_NAME}-%d{yyyy-MM-dd}-%i.log.gz">
+            <!-- Using JSON layout for structured logging -->
+            <JsonLayout complete="false" compact="true" eventEol="true">
+                 <KeyValuePair key="timestamp" value="$${date:yyyy-MM-dd'T'HH:mm:ss.SSS'Z'}"/>
+            </JsonLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+
+        <!--
+        Abstracted Appender for Kafka.
+        This demonstrates how an external system integration would be configured.
+        The actual `Kafka` appender type requires the log4j-kafka appender dependency.
+        -->
+        <Kafka name="Kafka" topic="auth-logs">
+            <PatternLayout pattern="%m" />
+            <Property name="bootstrap.servers">kafka-broker1:9092,kafka-broker2:9092</Property>
+        </Kafka>
+        
+        <!--
+        Abstracted Appender for Azure Event Hub.
+        This demonstrates another external system integration.
+        Actual implementation would require a custom appender for Azure Event Hubs.
+        -->
+        <Http name="AzureEventHub" url="https://<namespace>.servicebus.windows.net/<eventhub>/messages">
+            <Property name="Authorization" value="SharedAccessSignature ..."/>
+            <Property name="Content-Type" value="application/json"/>
+            <JsonLayout/>
+        </Http>
+
+    </Appenders>
+
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+            <!-- Add refs to other appenders like Kafka or AzureEventHub here -->
+            <!-- <AppenderRef ref="Kafka"/> -->
+            <!-- <AppenderRef ref="AzureEventHub"/> -->
+        </Root>
+
+        <Logger name="com.example.auth" level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Logger>
+
+    </Loggers>
+</Configuration>
+```
+```java
+// src/main/java/com/example/auth/AuthApplication.java
