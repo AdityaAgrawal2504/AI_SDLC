@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Appenders>
+        <!-- Console Appender for local development -->
+        <Console name="ConsoleAppender" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{YYYY-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
+
+        <!-- File Appender for structured JSON logging -->
+        <RollingFile name="FileAppender"
+                     fileName="logs/auth-lwc-8765.log"
+                     filePattern="logs/auth-lwc-8765-%d{yyyy-MM-dd}-%i.log.gz">
+            <JsonLayout complete="false" compact="true">
+                <KeyValuePair key="timestamp" value="$${date:yyyy-MM-dd'T'HH:mm:ss.SSS'Z'}"/>
+                <KeyValuePair key="level" value="%p"/>
+                <KeyValuePair key="logger" value="%c{1}"/>
+                <KeyValuePair key="thread" value="%t"/>
+                <KeyValuePair key="message" value="%m"/>
+                <KeyValuePair key="context" value="%X"/>
+            </JsonLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+
+        <!-- Abstracted Socket Appender for external systems like Logstash/Fluentd -->
+        <!-- This sends log events over TCP in a serialized format. It can be adapted for Kafka, etc. -->
+        <Socket name="SocketAppender" host="localhost" port="9500" reconnectionDelayMillis="10000">
+             <JsonLayout complete="false" compact="true">
+                <KeyValuePair key="timestamp" value="$${date:yyyy-MM-dd'T'HH:mm:ss.SSS'Z'}"/>
+             </JsonLayout>
+        </Socket>
+
+    </Appenders>
+
+    <Loggers>
+        <!-- Async Logger for application packages -->
+        <AsyncLogger name="com.example.auth.lwc8765" level="info" additivity="false">
+            <AppenderRef ref="FileAppender"/>
+            <AppenderRef ref="ConsoleAppender"/>
+            <!-- <AppenderRef ref="SocketAppender"/> -->
+        </AsyncLogger>
+
+        <!-- Root logger -->
+        <Root level="info">
+            <AppenderRef ref="FileAppender"/>
+            <AppenderRef ref="ConsoleAppender"/>
+        </Root>
+    </Loggers>
+</Configuration>
+```
+```java
+// src/main/java/com/example/auth/lwc8765/util/ErrorCodeLWC_8765.java
