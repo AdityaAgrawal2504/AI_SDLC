@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Appenders>
+        <!-- Console Appender for local development -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{ISO8601} %-5p [%t] %c{1.} - %m%n" />
+        </Console>
+
+        <!-- Rolling File Appender for structured JSON logging -->
+        <RollingFile name="File" fileName="logs/auth-service.log"
+                     filePattern="logs/auth-service-%d{yyyy-MM-dd}-%i.log.gz">
+            <JsonLayout complete="false" compact="true" eventEol="true">
+                <KeyValuePair key="timestamp" value="$${date:yyyy-MM-dd'T'HH:mm:ss.SSSZ}" />
+                <KeyValuePair key="level" value="%p" />
+                <KeyValuePair key="thread" value="%t" />
+                <KeyValuePair key="logger" value="%c{1.}" />
+                <KeyValuePair key="message" value="%m" />
+                <!-- ContextMap is used by StructuredLogger to add contextual data -->
+                <KeyValuePair key="context" value="$${ctx:all}" />
+            </JsonLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+
+        <!--
+        Placeholder for a Kafka Appender.
+        Requires kafka-clients dependency and specific configuration.
+        This demonstrates the abstraction layer's target.
+        <Kafka name="Kafka" topic="auth-logs">
+            <PatternLayout pattern="%m" />
+            <Property name="bootstrap.servers">kafka-broker:9092</Property>
+        </Kafka>
+        -->
+
+    </Appenders>
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+            <!-- <AppenderRef ref="Kafka"/> -->
+        </Root>
+        <Logger name="com.example.auth" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Logger>
+    </Loggers>
+</Configuration>
+```
+```java
+// src/main/java/com/example/auth/AuthApplication.java
