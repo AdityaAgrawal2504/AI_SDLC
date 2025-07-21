@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Appenders>
+        <!-- Console Appender for local development -->
+        <Console name="LogToConsole" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{ISO8601} %-5p [%t] %c{1.} - %m%n"/>
+        </Console>
+
+        <!-- Rolling File Appender for production file logging -->
+        <RollingFile name="LogToRollingFile"
+                     fileName="logs/fetch-conversations-api.log"
+                     filePattern="logs/fetch-conversations-api-%d{MM-dd-yyyy}-%i.log.gz">
+            <JsonTemplateLayout eventTemplateUri="classpath:log4j2-json-template.json" />
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+        </RollingFile>
+
+        <!-- Abstracted Kafka Appender placeholder -->
+        <!-- This demonstrates how an external system integration would be configured. -->
+        <!--
+        <Kafka name="LogToKafka" topic="app-logs">
+            <Property name="bootstrap.servers">kafka-broker1:9092,kafka-broker2:9092</Property>
+            <JsonTemplateLayout eventTemplateUri="classpath:log4j2-json-template.json" />
+        </Kafka>
+        -->
+    </Appenders>
+
+    <Loggers>
+        <!-- Log everything from our application at INFO level -->
+        <Logger name="com.example.fetchconversationsapi1" level="info" additivity="false">
+            <AppenderRef ref="LogToRollingFile"/>
+            <AppenderRef ref="LogToConsole"/>
+            <!-- <AppenderRef ref="LogToKafka"/> -->
+        </Logger>
+
+        <!-- Log SQL statements at DEBUG level -->
+        <Logger name="org.hibernate.SQL" level="debug" additivity="false">
+            <AppenderRef ref="LogToConsole"/>
+            <AppenderRef ref="LogToRollingFile"/>
+        </Logger>
+        <Logger name="org.hibernate.type.descriptor.sql" level="trace" additivity="false">
+             <AppenderRef ref="LogToConsole"/>
+             <AppenderRef ref="LogToRollingFile"/>
+        </Logger>
+
+        <!-- Root logger -->
+        <Root level="warn">
+            <AppenderRef ref="LogToRollingFile"/>
+            <AppenderRef ref="LogToConsole"/>
+        </Root>
+    </Loggers>
+</Configuration>
+```
+```json
+// src/main/resources/log4j2-json-template.json
+{
+  "timestamp": {
+    "$resolver": "timestamp",
+    "pattern": {
+      "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+      "timeZone": "UTC"
+    }
+  },
+  "logLevel": {
+    "$resolver": "level",
+    "field": "name"
+  },
+  "serviceName": "FetchConversationsAPI",
+  "thread": {
+    "$resolver": "thread",
+    "field": "name"
+  },
+  "loggerName": {
+    "$resolver": "logger",
+    "field": "name"
+  },
+  "message": {
+    "$resolver": "message",
+    "stringified": true
+  },
+  "context": {
+    "$resolver": "mdc"
+  },
+  "exception": {
+    "$resolver": "exception",
+    "stackTrace": {
+      "stringified": true
+    }
+  }
+}
+```
+```java
+// src/main/java/com/example/fetchconversationsapi1/FetchConversationsApiApplication_1.java
