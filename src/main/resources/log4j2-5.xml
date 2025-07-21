@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
+
+        <File name="File" fileName="logs/chatservice_C1A7.log">
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} | %-5p | %t | %c{1} | %m%n</Pattern>
+            </PatternLayout>
+        </File>
+
+        <!-- Custom Kafka Appender Stub -->
+        <KafkaAppender_C1A7 name="Kafka">
+            <PatternLayout pattern='{"timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}", "level":"%p", "thread":"%t", "logger":"%c{1}", "message":"%m"}'/>
+        </KafkaAppender_C1A7>
+
+        <!-- Custom Event Hub Appender Stub -->
+        <EventHubAppender_C1A7 name="EventHub">
+            <PatternLayout pattern='{"timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}", "level":"%p", "thread":"%t", "logger":"%c{1}", "message":"%m"}'/>
+        </EventHubAppender_C1A7>
+
+        <!-- Routing Appender to select log destination based on context or configuration -->
+        <Routing name="Routing">
+            <Routes pattern="$${ctx:LOG_DESTINATION}">
+                <!-- Default Route -->
+                <Route ref="File" key="$${ctx:LOG_DESTINATION}"/>
+                
+                <!-- Specific Routes -->
+                <Route ref="File" key="FILE"/>
+                <Route ref="Kafka" key="KAFKA"/>
+                <Route ref="EventHub" key="EVENT_HUB"/>
+            </Routes>
+        </Routing>
+    </Appenders>
+
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Routing"/>
+            <!-- Also log to console for development convenience -->
+            <AppenderRef ref="Console"/>
+        </Root>
+        <Logger name="com.chatapp.chatservice" level="debug" additivity="false">
+             <AppenderRef ref="Routing"/>
+             <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="net.devh.boot" level="info" additivity="false">
+             <AppenderRef ref="Routing"/>
+             <AppenderRef ref="Console"/>
+        </Logger>
+    </Loggers>
+</Configuration>
+```
+```java
+// src/main/java/com/chatapp/chatservice/ChatServiceApplication_C1A7.java
